@@ -14,16 +14,16 @@ jobs:
         include:
           - os: ubuntu-latest
             target: linux-x64
-          - os: macos-13
+          - os: macos-15-intel
             target: darwin-x64
-          - os: macos-14
+          - os: macos-15
             target: darwin-arm64
           - os: windows-latest
             target: win32-x64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -32,7 +32,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx vsce package --target ${{ matrix.target }} --out terminal-projects-${{ matrix.target }}.vsix
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: terminal-projects-${{ matrix.target }}
           path: terminal-projects-${{ matrix.target }}.vsix
