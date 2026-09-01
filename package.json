@@ -2,7 +2,7 @@
   "name": "terminal-projects",
   "displayName": "Terminal Projects",
   "description": "Manage independent PTY terminals grouped by project folder in one VS Code window.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "opdify",
   "license": "SEE LICENSE IN LICENSE",
   "icon": "media/icon.png",

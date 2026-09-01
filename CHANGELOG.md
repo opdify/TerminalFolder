@@ -2,6 +2,12 @@
 
 本项目的重要变更会记录在这里。
 
+## 0.1.2 - 2026-09-02
+
+### Changed
+
+- 插件市场与 VS Code Activity Bar 统一使用 Folder Terminal 图标。
+
 ## 0.1.1 - 2026-09-02
 
 ### Changed
