@@ -28,16 +28,32 @@ const webviewOptions = {
   logLevel: 'info'
 };
 
+const sidebarWebviewOptions = {
+  entryPoints: ['src/sidebarWebview.ts'],
+  bundle: true,
+  platform: 'browser',
+  format: 'iife',
+  target: ['chrome120'],
+  outfile: 'dist/sidebarWebview.js',
+  sourcemap: true,
+  loader: {
+    '.css': 'css'
+  },
+  logLevel: 'info'
+};
+
 if (watch) {
   const contexts = await Promise.all([
     esbuild.context(extensionOptions),
-    esbuild.context(webviewOptions)
+    esbuild.context(webviewOptions),
+    esbuild.context(sidebarWebviewOptions)
   ]);
   await Promise.all(contexts.map((context) => context.watch()));
   console.log('Watching extension and webview bundles...');
 } else {
   await Promise.all([
     esbuild.build(extensionOptions),
-    esbuild.build(webviewOptions)
+    esbuild.build(webviewOptions),
+    esbuild.build(sidebarWebviewOptions)
   ]);
 }

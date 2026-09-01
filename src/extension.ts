@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { FolderStore } from './folderStore';
-import type { FolderNode, TerminalNode } from './treeProvider';
-import { ProjectTreeProvider } from './treeProvider';
+import { SidebarViewProvider } from './sidebarView';
 import { TerminalManager } from './terminalManager';
 import { TerminalPanel } from './terminalPanel';
 
@@ -11,14 +10,14 @@ export function activate(context: vscode.ExtensionContext): void {
     .getConfiguration('terminalProjects')
     .get<number>('outputBufferBytes', 2 * 1024 * 1024);
   const terminals = new TerminalManager((id) => folders.get(id), outputBufferLimit);
-  const tree = new ProjectTreeProvider(folders, terminals);
   const panel = new TerminalPanel(context.extensionUri, terminals);
-  const treeView = vscode.window.createTreeView('terminalProjects.folders', {
-    treeDataProvider: tree,
-    showCollapseAll: true
-  });
+  const sidebar = new SidebarViewProvider(context.extensionUri, folders, terminals);
+  const sidebarRegistration = vscode.window.registerWebviewViewProvider(
+    'terminalProjects.folders',
+    sidebar
+  );
 
-  context.subscriptions.push(terminals, tree, panel, treeView);
+  context.subscriptions.push(terminals, sidebar, panel, sidebarRegistration);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('terminalProjects.addFolder', async (providedUri?: vscode.Uri) => {
@@ -52,7 +51,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
       const existing = folders.findByUri(uri);
       const folder = await folders.add(uri);
-      tree.refresh();
+      sidebar.expandFolder(folder.id);
       if (existing) {
         void vscode.window.showInformationMessage(`${folder.name} is already in Terminal Projects.`);
       }
@@ -61,8 +60,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
     vscode.commands.registerCommand(
       'terminalProjects.addTerminal',
-      async (node: FolderNode | string | undefined) => {
-        const folderId = typeof node === 'string' ? node : node?.kind === 'folder' ? node.folder.id : undefined;
+      async (node: string | undefined) => {
+        const folderId = typeof node === 'string' ? node : undefined;
         const folder = folderId ? folders.get(folderId) : undefined;
         if (!folder) {
           return;
@@ -74,11 +73,12 @@ export function activate(context: vscode.ExtensionContext): void {
           if ((stat.type & vscode.FileType.Directory) === 0) {
             throw new Error('The saved path is no longer a directory.');
           }
+          sidebar.expandFolder(folder.id);
           const session = terminals.create(folder);
           terminals.select(session.id);
           panel.show(session.id);
           panel.terminalCreated(session.id);
-          tree.refresh();
+          sidebar.refresh();
           return session.id;
         } catch (error) {
           void vscode.window.showErrorMessage(
@@ -90,23 +90,21 @@ export function activate(context: vscode.ExtensionContext): void {
 
     vscode.commands.registerCommand(
       'terminalProjects.selectTerminal',
-      (value: TerminalNode | string | undefined) => {
-        const terminalId =
-          typeof value === 'string' ? value : value?.kind === 'terminal' ? value.terminal.id : undefined;
+      (value: string | undefined) => {
+        const terminalId = typeof value === 'string' ? value : undefined;
         if (!terminalId || !terminals.get(terminalId)) {
           return;
         }
         terminals.select(terminalId);
         panel.show(terminalId);
-        tree.refresh();
+        sidebar.refresh();
       }
     ),
 
     vscode.commands.registerCommand(
       'terminalProjects.renameTerminal',
-      async (node: TerminalNode | string | undefined) => {
-        const terminalId =
-          typeof node === 'string' ? node : node?.kind === 'terminal' ? node.terminal.id : undefined;
+      async (node: string | undefined) => {
+        const terminalId = typeof node === 'string' ? node : undefined;
         const terminal = terminalId ? terminals.get(terminalId) : undefined;
         if (!terminal) {
           return;
@@ -124,26 +122,25 @@ export function activate(context: vscode.ExtensionContext): void {
         }
         terminals.rename(terminal.id, name);
         panel.terminalRenamed(terminal.id);
-        tree.refresh();
+        sidebar.refresh();
       }
     ),
 
     vscode.commands.registerCommand(
       'terminalProjects.killTerminal',
-      async (node: TerminalNode | string | undefined) => {
-        const terminalId =
-          typeof node === 'string' ? node : node?.kind === 'terminal' ? node.terminal.id : undefined;
+      async (node: string | undefined) => {
+        const terminalId = typeof node === 'string' ? node : undefined;
         if (terminalId) {
           await terminals.kill(terminalId);
-          tree.refresh();
+          sidebar.refresh();
         }
       }
     ),
 
     vscode.commands.registerCommand(
       'terminalProjects.removeFolder',
-      async (node: FolderNode | string | undefined) => {
-        const folderId = typeof node === 'string' ? node : node?.kind === 'folder' ? node.folder.id : undefined;
+      async (node: string | undefined) => {
+        const folderId = typeof node === 'string' ? node : undefined;
         const folder = folderId ? folders.get(folderId) : undefined;
         if (!folder) {
           return;
@@ -163,7 +160,7 @@ export function activate(context: vscode.ExtensionContext): void {
         }
 
         await folders.remove(folder.id);
-        tree.refresh();
+        sidebar.removeFolder(folder.id);
       }
     ),
 
@@ -171,7 +168,7 @@ export function activate(context: vscode.ExtensionContext): void {
       panel.show(terminals.selectedTerminalId);
     }),
 
-    vscode.commands.registerCommand('terminalProjects.refresh', () => tree.refresh())
+    vscode.commands.registerCommand('terminalProjects.refresh', () => sidebar.refresh())
   );
 }
 

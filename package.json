@@ -2,7 +2,7 @@
   "name": "terminal-projects",
   "displayName": "Terminal Projects",
   "description": "Manage independent PTY terminals grouped by project folder in one VS Code window.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "opdify",
   "license": "SEE LICENSE IN LICENSE",
   "icon": "media/icon.png",
@@ -96,6 +96,7 @@
         {
           "id": "terminalProjects.folders",
           "name": "Terminal Projects",
+          "type": "webview",
           "icon": "media/activity-terminal.svg"
         }
       ]
@@ -116,28 +117,6 @@
           "command": "terminalProjects.refresh",
           "when": "view == terminalProjects.folders",
           "group": "navigation@3"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "terminalProjects.addTerminal",
-          "when": "view == terminalProjects.folders && viewItem == terminalProjectFolder",
-          "group": "inline@1"
-        },
-        {
-          "command": "terminalProjects.removeFolder",
-          "when": "view == terminalProjects.folders && viewItem == terminalProjectFolder",
-          "group": "terminalProjects@2"
-        },
-        {
-          "command": "terminalProjects.renameTerminal",
-          "when": "view == terminalProjects.folders && (viewItem == terminalProjectRunning || viewItem == terminalProjectExited)",
-          "group": "terminalProjects@1"
-        },
-        {
-          "command": "terminalProjects.killTerminal",
-          "when": "view == terminalProjects.folders && (viewItem == terminalProjectRunning || viewItem == terminalProjectExited)",
-          "group": "inline@2"
         }
       ]
     },

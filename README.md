@@ -33,8 +33,9 @@ npm run build
 1. 点击 `Add Folder…` 选择项目目录。
 2. 将鼠标移到 Folder 上，点击行尾的 `+`。
 3. 点击任意 Terminal，在唯一的 Terminal Surface 中切换。
-4. 右键 Terminal 可 Rename；行尾垃圾桶用于 Kill。
-5. 右键 Folder 可 Remove；存在 Terminal 时会先要求确认并终止它们。
+4. 点击 Folder 行可展开或收起，打开和关闭的文件夹图标会显示当前状态。
+5. 悬停或右键 Terminal，通过 `…` 菜单 Rename 或 Kill。
+6. 悬停或右键 Folder，通过 `…` 菜单 Remove；存在 Terminal 时会先要求确认并终止它们。
 
 macOS 使用 `Cmd+C`/`Cmd+V`，Linux/Windows 使用 `Ctrl+Shift+C`/`Ctrl+Shift+V`。右键有选区时复制，无选区时粘贴。
 
