@@ -1,0 +1,203 @@
+{
+  "name": "terminal-projects",
+  "displayName": "Terminal Projects",
+  "description": "Manage independent PTY terminals grouped by project folder in one VS Code window.",
+  "version": "0.1.0",
+  "publisher": "opdify",
+  "license": "SEE LICENSE IN LICENSE",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#172554",
+    "theme": "dark"
+  },
+  "pricing": "Free",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opdify/vscode-terminal-projects.git"
+  },
+  "homepage": "https://github.com/opdify/vscode-terminal-projects#readme",
+  "bugs": {
+    "url": "https://github.com/opdify/vscode-terminal-projects/issues"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "terminal",
+    "pty",
+    "projects",
+    "remote ssh"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "onView:terminalProjects.folders",
+    "onCommand:terminalProjects.addFolder",
+    "onCommand:terminalProjects.openSurface"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "terminalProjects.addFolder",
+        "title": "Terminal Projects: Add Folder",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "terminalProjects.removeFolder",
+        "title": "Remove Folder",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "terminalProjects.addTerminal",
+        "title": "New Terminal",
+        "icon": "$(add)"
+      },
+      {
+        "command": "terminalProjects.selectTerminal",
+        "title": "Show Terminal"
+      },
+      {
+        "command": "terminalProjects.renameTerminal",
+        "title": "Rename Terminal",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "terminalProjects.killTerminal",
+        "title": "Kill Terminal",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "terminalProjects.openSurface",
+        "title": "Terminal Projects: Open Terminal Surface",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "terminalProjects.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "terminalProjects",
+          "title": "Terminal Projects",
+          "icon": "media/activity-terminal.svg"
+        }
+      ]
+    },
+    "views": {
+      "terminalProjects": [
+        {
+          "id": "terminalProjects.folders",
+          "name": "Terminal Projects",
+          "icon": "media/activity-terminal.svg"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "terminalProjects.addFolder",
+          "when": "view == terminalProjects.folders",
+          "group": "navigation@1"
+        },
+        {
+          "command": "terminalProjects.openSurface",
+          "when": "view == terminalProjects.folders",
+          "group": "navigation@2"
+        },
+        {
+          "command": "terminalProjects.refresh",
+          "when": "view == terminalProjects.folders",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "terminalProjects.addTerminal",
+          "when": "view == terminalProjects.folders && viewItem == terminalProjectFolder",
+          "group": "inline@1"
+        },
+        {
+          "command": "terminalProjects.removeFolder",
+          "when": "view == terminalProjects.folders && viewItem == terminalProjectFolder",
+          "group": "terminalProjects@2"
+        },
+        {
+          "command": "terminalProjects.renameTerminal",
+          "when": "view == terminalProjects.folders && (viewItem == terminalProjectRunning || viewItem == terminalProjectExited)",
+          "group": "terminalProjects@1"
+        },
+        {
+          "command": "terminalProjects.killTerminal",
+          "when": "view == terminalProjects.folders && (viewItem == terminalProjectRunning || viewItem == terminalProjectExited)",
+          "group": "inline@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Terminal Projects",
+      "properties": {
+        "terminalProjects.scrollback": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 100,
+          "maximum": 100000,
+          "description": "Maximum number of lines retained by each visible terminal frontend."
+        },
+        "terminalProjects.outputBufferBytes": {
+          "type": "number",
+          "default": 2097152,
+          "minimum": 65536,
+          "maximum": 33554432,
+          "description": "Approximate maximum raw output retained per terminal so a closed Terminal Surface can be reconstructed."
+        },
+        "terminalProjects.shell": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "description": "Optional shell executable. Empty uses the remote or local extension host's normal default shell."
+        },
+        "terminalProjects.shellArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "machine-overridable",
+          "description": "Arguments passed to the configured shell."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "postinstall": "node ./scripts/fix-node-pty.mjs",
+    "clean": "node ./scripts/clean.mjs",
+    "build": "node ./esbuild.mjs",
+    "watch": "node ./esbuild.mjs --watch",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:pty": "node ./scripts/acceptance-pty.mjs",
+    "package": "npm run clean && npm run check && npm run test && npm run build && node ./scripts/package-vsix.mjs"
+  },
+  "dependencies": {
+    "node-pty": "^1.1.0"
+  },
+  "devDependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "@types/node": "^24.3.0",
+    "@types/vscode": "^1.95.0",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.28.2",
+    "tree-kill": "^1.2.2",
+    "typescript": "^7.0.0",
+    "vitest": "^4.1.11"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Terminal Projects: Build",
+      "type": "npm",
+      "script": "build",
+      "problemMatcher": "$tsc",
+      "group": "build"
+    }
+  ]
+}

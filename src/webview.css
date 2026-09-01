@@ -1,0 +1,116 @@
+:root {
+  color-scheme: light dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  color: var(--vscode-terminal-foreground, var(--vscode-editor-foreground));
+  background: var(--vscode-editor-background);
+}
+
+body {
+  font-family: var(--vscode-font-family);
+}
+
+.surface {
+  display: grid;
+  grid-template-rows: 34px minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+}
+
+.surface__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--vscode-panel-border, transparent);
+  background: var(--vscode-editor-background);
+  user-select: none;
+}
+
+.surface__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--vscode-foreground);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.surface__status {
+  margin-left: auto;
+  font-size: 11px;
+}
+
+.surface__status--running {
+  color: var(--vscode-testing-iconPassed, #73c991);
+}
+
+.surface__status--exited {
+  color: var(--vscode-disabledForeground);
+}
+
+.terminal-host {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  padding: 8px 6px 4px 10px;
+  overflow: hidden;
+  background: var(--vscode-editor-background);
+}
+
+.terminal-host--empty {
+  visibility: hidden;
+}
+
+.terminal-instance {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.terminal-instance--active {
+  display: block;
+}
+
+.terminal-instance .xterm {
+  width: 100%;
+  height: 100%;
+}
+
+.terminal-instance .xterm-viewport {
+  scrollbar-color: var(--vscode-scrollbarSlider-background) transparent;
+}
+
+.empty-state {
+  display: none;
+  grid-row: 2;
+  align-self: center;
+  justify-self: center;
+  color: var(--vscode-descriptionForeground);
+  font-size: 13px;
+  text-align: center;
+  user-select: none;
+}
+
+.empty-state--visible {
+  display: block;
+}
+
+.empty-state__icon {
+  margin-bottom: 10px;
+  color: var(--vscode-disabledForeground);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 28px;
+}
