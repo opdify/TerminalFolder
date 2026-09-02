@@ -1,6 +1,9 @@
 import { FitAddon } from '@xterm/addon-fit';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
+import { WebglAddon } from '@xterm/addon-webgl';
 import { Terminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
+import { consumeClipboardShortcut } from './clipboard';
 import './webview.css';
 
 interface VsCodeApi {
@@ -24,7 +27,15 @@ interface WebTerminal {
   readonly terminal: Terminal;
   readonly fit: FitAddon;
   readonly container: HTMLDivElement;
+  webgl?: WebglAddon;
   opened: boolean;
+}
+
+interface TerminalAppearance {
+  readonly fontFamily: string;
+  readonly fontSize: number;
+  readonly letterSpacing: number;
+  readonly lineHeight: number;
 }
 
 interface HostMessage {
@@ -36,6 +47,7 @@ interface HostMessage {
   readonly data?: string;
   readonly exitCode?: number;
   readonly scrollback?: number;
+  readonly appearance?: unknown;
 }
 
 const vscode = acquireVsCodeApi();
@@ -49,6 +61,7 @@ let activeId: string | undefined;
 let initialized = false;
 let scrollback = 5000;
 let resizeFrame: number | undefined;
+let appearance = defaultTerminalAppearance();
 
 window.addEventListener('message', (event: MessageEvent<HostMessage>) => {
   const message = event.data;
@@ -65,6 +78,8 @@ window.addEventListener('message', (event: MessageEvent<HostMessage>) => {
 });
 
 new ResizeObserver(() => scheduleFit()).observe(terminalHost);
+void document.fonts.ready.then(() => scheduleFit());
+document.fonts.addEventListener('loadingdone', () => scheduleFit());
 
 window.addEventListener('focus', () => {
   const session = activeId ? sessions.get(activeId) : undefined;
@@ -77,6 +92,7 @@ function handleMessage(message: HostMessage): void {
   switch (message.type) {
     case 'initialize': {
       scrollback = clampScrollback(message.scrollback);
+      appearance = normalizeTerminalAppearance(message.appearance);
       for (const session of sessions.values()) {
         session.terminal.dispose();
         session.container.remove();
@@ -156,20 +172,27 @@ function ensureSession(info: TerminalInfo): WebTerminal {
   terminalHost.append(container);
 
   const terminal = new Terminal({
-    allowProposedApi: false,
+    // The Unicode 11 width provider is exposed through xterm's proposed API.
+    allowProposedApi: true,
     allowTransparency: true,
     cursorBlink: true,
     cursorStyle: 'block',
     convertEol: false,
     drawBoldTextInBrightColors: true,
-    fontFamily: terminalFontFamily(),
-    fontSize: 13,
+    customGlyphs: true,
+    fontFamily: appearance.fontFamily,
+    fontSize: appearance.fontSize,
+    letterSpacing: appearance.letterSpacing,
+    lineHeight: appearance.lineHeight,
     minimumContrastRatio: 1,
     scrollback,
     theme: terminalTheme()
   });
   const fit = new FitAddon();
+  const unicode11 = new Unicode11Addon();
   terminal.loadAddon(fit);
+  terminal.loadAddon(unicode11);
+  terminal.unicode.activeVersion = '11';
 
   const session: WebTerminal = { info, terminal, fit, container, opened: false };
   sessions.set(info.id, session);
@@ -217,8 +240,23 @@ function showSession(id: string | undefined): void {
   if (!session.opened) {
     session.terminal.open(session.container);
     session.opened = true;
+    enableWebglRenderer(session);
   }
   scheduleFit(true);
+}
+
+function enableWebglRenderer(session: WebTerminal): void {
+  try {
+    const webgl = new WebglAddon();
+    webgl.onContextLoss(() => {
+      webgl.dispose();
+      session.webgl = undefined;
+    });
+    session.terminal.loadAddon(webgl);
+    session.webgl = webgl;
+  } catch {
+    // Software-only and remote environments can fall back to xterm's DOM renderer.
+  }
 }
 
 function removeSession(id: string): void {
@@ -270,22 +308,16 @@ function scheduleFit(focus = false): void {
 }
 
 function handleClipboardShortcut(event: KeyboardEvent, session: WebTerminal): boolean {
-  if (event.type !== 'keydown') {
-    return true;
-  }
-
-  const copy =
-    (event.metaKey && event.code === 'KeyC') ||
-    (event.ctrlKey && event.shiftKey && event.code === 'KeyC');
-  if (copy && session.terminal.hasSelection()) {
+  const action = consumeClipboardShortcut(
+    event,
+    session.terminal.hasSelection(),
+    session.info.status === 'running'
+  );
+  if (action === 'copy') {
     void navigator.clipboard.writeText(session.terminal.getSelection());
     return false;
   }
-
-  const paste =
-    (event.metaKey && event.code === 'KeyV') ||
-    (event.ctrlKey && event.shiftKey && event.code === 'KeyV');
-  if (paste && session.info.status === 'running') {
+  if (action === 'paste') {
     void navigator.clipboard.readText().then((text) => session.terminal.paste(text));
     return false;
   }
@@ -321,6 +353,41 @@ function terminalFontFamily(): string {
       .getPropertyValue('--vscode-editor-font-family')
       .trim() || 'monospace'
   );
+}
+
+function defaultTerminalAppearance(): TerminalAppearance {
+  return {
+    fontFamily: terminalFontFamily(),
+    fontSize: 14,
+    letterSpacing: 0,
+    lineHeight: 1
+  };
+}
+
+function normalizeTerminalAppearance(value: unknown): TerminalAppearance {
+  const defaults = defaultTerminalAppearance();
+  if (!value || typeof value !== 'object') {
+    return defaults;
+  }
+  const candidate = value as Partial<TerminalAppearance>;
+  return {
+    fontFamily:
+      typeof candidate.fontFamily === 'string' && candidate.fontFamily.trim()
+        ? candidate.fontFamily.trim()
+        : defaults.fontFamily,
+    fontSize: clampNumber(candidate.fontSize, 6, 100, defaults.fontSize),
+    letterSpacing: clampNumber(candidate.letterSpacing, -5, 20, defaults.letterSpacing),
+    lineHeight: clampNumber(candidate.lineHeight, 1, 3, defaults.lineHeight)
+  };
+}
+
+function clampNumber(
+  value: number | undefined,
+  minimum: number,
+  maximum: number,
+  fallback: number
+): number {
+  return Number.isFinite(value) ? Math.max(minimum, Math.min(maximum, value ?? fallback)) : fallback;
 }
 
 function clampScrollback(value: number | undefined): number {

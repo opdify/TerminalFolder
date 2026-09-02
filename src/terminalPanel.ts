@@ -120,7 +120,8 @@ export class TerminalPanel implements vscode.Disposable {
           activeId: this.terminals.selectedTerminalId,
           scrollback: vscode.workspace
             .getConfiguration('terminalProjects')
-            .get<number>('scrollback', 5000)
+            .get<number>('scrollback', 5000),
+          appearance: terminalAppearance()
         }, true);
         this.webviewReady = true;
         break;
@@ -176,3 +177,22 @@ export class TerminalPanel implements vscode.Disposable {
 }
 
 export type { TerminalSnapshot };
+
+function terminalAppearance(): {
+  fontFamily: string;
+  fontSize: number;
+  letterSpacing: number;
+  lineHeight: number;
+} {
+  const terminal = vscode.workspace.getConfiguration('terminal.integrated');
+  const editor = vscode.workspace.getConfiguration('editor');
+  return {
+    fontFamily:
+      terminal.get<string>('fontFamily', '').trim() ||
+      editor.get<string>('fontFamily', '').trim() ||
+      'monospace',
+    fontSize: terminal.get<number>('fontSize', 14),
+    letterSpacing: terminal.get<number>('letterSpacing', 0),
+    lineHeight: terminal.get<number>('lineHeight', 1)
+  };
+}

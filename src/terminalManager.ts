@@ -84,7 +84,8 @@ export class TerminalManager implements vscode.Disposable {
     }
     environment.TERM = environment.TERM || 'xterm-256color';
     environment.COLORTERM = environment.COLORTERM || 'truecolor';
-    environment.TERM_PROGRAM = 'vscode-terminal-projects';
+    environment.TERM_PROGRAM = 'vscode';
+    environment.TERM_PROGRAM_VERSION = vscode.version;
 
     const processHandle = pty.spawn(shell, shellArgs, {
       name: environment.TERM,
