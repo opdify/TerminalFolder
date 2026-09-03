@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import * as vscode from 'vscode';
 import type { TerminalSnapshot } from './model';
+import { normalizeTerminalAppearance, type TerminalAppearance } from './terminalAppearance';
 import type { TerminalManager } from './terminalManager';
 
 interface WebviewMessage {
@@ -35,6 +36,11 @@ export class TerminalPanel implements vscode.Disposable {
           type: 'selectionChanged',
           terminalId: terminals.selectedTerminalId
         });
+      }),
+      vscode.workspace.onDidChangeConfiguration((event) => {
+        if (terminalAppearanceSettings.some((setting) => event.affectsConfiguration(setting))) {
+          void this.post({ type: 'appearance', appearance: terminalAppearance() });
+        }
       })
     ];
   }
@@ -178,21 +184,36 @@ export class TerminalPanel implements vscode.Disposable {
 
 export type { TerminalSnapshot };
 
-function terminalAppearance(): {
-  fontFamily: string;
-  fontSize: number;
-  letterSpacing: number;
-  lineHeight: number;
-} {
+const terminalAppearanceSettings = [
+  'terminal.integrated.fontFamily',
+  'terminal.integrated.fontSize',
+  'terminal.integrated.fontWeight',
+  'terminal.integrated.fontWeightBold',
+  'terminal.integrated.letterSpacing',
+  'terminal.integrated.lineHeight',
+  'terminal.integrated.minimumContrastRatio',
+  'terminal.integrated.gpuAcceleration',
+  'editor.fontFamily'
+] as const;
+
+function terminalAppearance(): TerminalAppearance {
   const terminal = vscode.workspace.getConfiguration('terminal.integrated');
   const editor = vscode.workspace.getConfiguration('editor');
-  return {
-    fontFamily:
-      terminal.get<string>('fontFamily', '').trim() ||
-      editor.get<string>('fontFamily', '').trim() ||
-      'monospace',
-    fontSize: terminal.get<number>('fontSize', 14),
-    letterSpacing: terminal.get<number>('letterSpacing', 0),
-    lineHeight: terminal.get<number>('lineHeight', 1)
-  };
+  const fontFamily =
+    terminal.get<string>('fontFamily', '').trim() ||
+    editor.get<string>('fontFamily', '').trim() ||
+    'monospace';
+  return normalizeTerminalAppearance(
+    {
+      fontFamily,
+      fontSize: terminal.get<number>('fontSize', 14),
+      fontWeight: terminal.get<string | number>('fontWeight', 'normal'),
+      fontWeightBold: terminal.get<string | number>('fontWeightBold', 'bold'),
+      letterSpacing: terminal.get<number>('letterSpacing', 0),
+      lineHeight: terminal.get<number>('lineHeight', 1),
+      minimumContrastRatio: terminal.get<number>('minimumContrastRatio', 4.5),
+      gpuAcceleration: terminal.get<string>('gpuAcceleration', 'auto')
+    },
+    fontFamily
+  );
 }

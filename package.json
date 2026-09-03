@@ -2,7 +2,7 @@
   "name": "terminal-projects",
   "displayName": "Terminal Projects",
   "description": "Manage multiple independent terminals in one VS Code workspace, especially parallel Claude CLI sessions. 在一个 VS Code 工作区中管理多个独立终端，尤其适合并行运行多个 Claude CLI 会话。",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publisher": "opdify",
   "license": "SEE LICENSE IN LICENSE",
   "icon": "media/icon.png",
