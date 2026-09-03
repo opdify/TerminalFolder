@@ -9,22 +9,8 @@ const extensionOptions = {
   format: 'cjs',
   target: 'node20',
   outfile: 'dist/extension.js',
-  external: ['vscode', 'node-pty'],
+  external: ['vscode'],
   sourcemap: true,
-  logLevel: 'info'
-};
-
-const webviewOptions = {
-  entryPoints: ['src/webview.ts'],
-  bundle: true,
-  platform: 'browser',
-  format: 'iife',
-  target: ['chrome120'],
-  outfile: 'dist/webview.js',
-  sourcemap: true,
-  loader: {
-    '.css': 'css'
-  },
   logLevel: 'info'
 };
 
@@ -45,15 +31,10 @@ const sidebarWebviewOptions = {
 if (watch) {
   const contexts = await Promise.all([
     esbuild.context(extensionOptions),
-    esbuild.context(webviewOptions),
     esbuild.context(sidebarWebviewOptions)
   ]);
   await Promise.all(contexts.map((context) => context.watch()));
   console.log('Watching extension and webview bundles...');
 } else {
-  await Promise.all([
-    esbuild.build(extensionOptions),
-    esbuild.build(webviewOptions),
-    esbuild.build(sidebarWebviewOptions)
-  ]);
+  await Promise.all([esbuild.build(extensionOptions), esbuild.build(sidebarWebviewOptions)]);
 }

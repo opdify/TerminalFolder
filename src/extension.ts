@@ -2,22 +2,17 @@ import * as vscode from 'vscode';
 import { FolderStore } from './folderStore';
 import { SidebarViewProvider } from './sidebarView';
 import { TerminalManager } from './terminalManager';
-import { TerminalPanel } from './terminalPanel';
 
 export function activate(context: vscode.ExtensionContext): void {
   const folders = new FolderStore(context.workspaceState);
-  const outputBufferLimit = vscode.workspace
-    .getConfiguration('terminalProjects')
-    .get<number>('outputBufferBytes', 2 * 1024 * 1024);
-  const terminals = new TerminalManager((id) => folders.get(id), outputBufferLimit);
-  const panel = new TerminalPanel(context.extensionUri, terminals);
+  const terminals = new TerminalManager();
   const sidebar = new SidebarViewProvider(context.extensionUri, folders, terminals);
   const sidebarRegistration = vscode.window.registerWebviewViewProvider(
     'terminalProjects.folders',
     sidebar
   );
 
-  context.subscriptions.push(terminals, sidebar, panel, sidebarRegistration);
+  context.subscriptions.push(terminals, sidebar, sidebarRegistration);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('terminalProjects.addFolder', async (providedUri?: vscode.Uri) => {
@@ -76,8 +71,6 @@ export function activate(context: vscode.ExtensionContext): void {
           sidebar.expandFolder(folder.id);
           const session = terminals.create(folder);
           terminals.select(session.id);
-          panel.show(session.id);
-          panel.terminalCreated(session.id);
           sidebar.refresh();
           return session.id;
         } catch (error) {
@@ -96,7 +89,6 @@ export function activate(context: vscode.ExtensionContext): void {
           return;
         }
         terminals.select(terminalId);
-        panel.show(terminalId);
         sidebar.refresh();
       }
     ),
@@ -121,7 +113,6 @@ export function activate(context: vscode.ExtensionContext): void {
           return;
         }
         terminals.rename(terminal.id, name);
-        panel.terminalRenamed(terminal.id);
         sidebar.refresh();
       }
     ),
@@ -165,7 +156,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
 
     vscode.commands.registerCommand('terminalProjects.openSurface', () => {
-      panel.show(terminals.selectedTerminalId);
+      terminals.showSelected();
     }),
 
     vscode.commands.registerCommand('terminalProjects.refresh', () => sidebar.refresh())
@@ -173,7 +164,7 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 export function deactivate(): void {
-  // VS Code disposes the subscriptions registered by activate, including every PTY.
+  // VS Code disposes the subscriptions registered by activate, including managed terminals.
 }
 
 function errorMessage(error: unknown): string {

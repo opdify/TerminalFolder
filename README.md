@@ -10,9 +10,9 @@
 
 ### 这个插件做什么？
 
-Terminal Projects 是一款 VS Code 多终端管理插件。它可以在一个 VS Code 窗口中，按“工作目录 → Terminal”的层级创建、组织和切换多个相互独立的真实 PTY 终端。
+Terminal Projects 是一款 VS Code 多终端管理插件。它可以在一个 VS Code 窗口中，按“工作目录 → Terminal”的层级创建、组织和切换多个 VS Code 原生终端。
 
-每个终端都有独立的 shell、工作目录、进程和输出。切换终端只会改变当前显示的会话，其他终端仍会在后台继续运行。
+每个终端都有独立的 shell、工作目录、进程和输出。终端由 VS Code 原生终端面板负责渲染，因此字体、主题、复制粘贴、Claude CLI TUI 和快捷键行为都与手动创建的 VS Code 终端一致。切换终端只会改变当前显示的会话，其他终端仍会在后台继续运行。
 
 ### 典型使用场景
 
@@ -23,12 +23,12 @@ Terminal Projects 是一款 VS Code 多终端管理插件。它可以在一个 V
 
 ### 核心功能
 
-- 一个 Folder 下可以创建多个相互独立的 `node-pty` 终端。
+- 一个 Folder 下可以创建多个相互独立的 VS Code 原生终端。
 - 支持添加本地目录或 Remote SSH 远端目录，不修改当前 VS Code workspace。
 - 通过左侧 Terminal Projects 视图快速展开、收起和切换会话。
 - 隐藏的终端继续运行并接收输出，不会因为切换而重建进程。
-- 支持 ANSI、TUI、Ctrl+C/Ctrl+D、方向键、Tab、窗口 resize、复制和粘贴。
-- 支持终端重命名、终止、自然退出状态和 Folder 删除确认。
+- 原生支持 ANSI、TUI、Ctrl+C/Ctrl+D、方向键、Tab、窗口 resize、复制和粘贴。
+- 支持管理名称修改、终端终止和 Folder 删除确认。
 
 ### 快速使用
 
@@ -36,15 +36,15 @@ Terminal Projects 是一款 VS Code 多终端管理插件。它可以在一个 V
 2. 点击 `Add Folder…`，选择工作目录。
 3. 将鼠标移到 Folder 上，点击行尾的 `+` 创建终端。
 4. 在同一个 Folder 下重复创建多个终端，即可并行运行多个 Claude CLI 或其他命令行任务。
-5. 点击终端名称，在唯一的 Terminal Surface 中快速切换。
+5. 点击终端名称，在 VS Code 原生终端面板中快速切换。
 
 ## English
 
 ### What does this extension do?
 
-Terminal Projects is a multi-terminal manager for VS Code. It lets you create, organize, and switch between multiple independent PTY terminals using a “working folder → terminal” hierarchy inside a single VS Code window.
+Terminal Projects is a multi-terminal manager for VS Code. It lets you create, organize, and switch between multiple VS Code native terminals using a “working folder → terminal” hierarchy inside a single VS Code window.
 
-Every terminal has its own shell, working directory, processes, and output stream. Switching terminals only changes the visible session—the other terminals keep running in the background.
+Every terminal has its own shell, working directory, processes, and output stream. Rendering is handled by VS Code's native terminal panel, so fonts, themes, copy and paste, Claude CLI TUI output, and shortcuts behave exactly like a terminal created directly in VS Code. Switching terminals only changes the visible session—the other terminals keep running in the background.
 
 ### Typical use cases
 
@@ -55,12 +55,12 @@ Every terminal has its own shell, working directory, processes, and output strea
 
 ### Key features
 
-- Create multiple independent `node-pty` terminals under each folder.
+- Create multiple independent VS Code native terminals under each folder.
 - Add local or Remote SSH folders without changing the current VS Code workspace.
 - Expand, collapse, and switch sessions from the Terminal Projects Activity Bar view.
 - Keep hidden terminals running and receiving output without recreating their processes.
-- Support ANSI, TUI applications, Ctrl+C/Ctrl+D, arrow keys, Tab, resize, copy, and paste.
-- Rename and terminate terminals, detect natural exits, and confirm folder removal.
+- Natively support ANSI, TUI applications, Ctrl+C/Ctrl+D, arrow keys, Tab, resize, copy, and paste.
+- Change management names, terminate terminals, and confirm folder removal.
 
 ### Quick start
 
@@ -68,26 +68,28 @@ Every terminal has its own shell, working directory, processes, and output strea
 2. Click `Add Folder…` and choose a working directory.
 3. Hover over the folder and click `+` to create a terminal.
 4. Create more terminals under the same folder to run multiple Claude CLI sessions or other command-line tasks in parallel.
-5. Click a terminal name to switch the shared Terminal Surface to that session.
+5. Click a terminal name to switch to it in VS Code's native terminal panel.
 
 ## Remote SSH
 
-Terminal Projects is declared as a workspace extension. In a Remote SSH window, directory validation, extension code, and `node-pty` all run on the remote Extension Host, while the terminal interface is rendered locally by VS Code.
+Terminal Projects is declared as a workspace extension. In a Remote SSH window, directory validation and extension code run on the remote Extension Host, while VS Code creates and renders the native remote terminals.
 
-Terminal Projects 被声明为 workspace extension。在 Remote SSH 窗口中，目录校验、扩展代码和 `node-pty` 都运行在远端 Extension Host，终端界面仍由本地 VS Code 渲染。
+Terminal Projects 被声明为 workspace extension。在 Remote SSH 窗口中，目录校验和扩展代码运行在远端 Extension Host，远程终端由 VS Code 原生创建和渲染。
 
 ## Settings / 设置
 
-- `terminalProjects.scrollback`: Maximum retained lines for each terminal frontend. Default: 5000. / 每个终端前端保留的最大行数，默认 5000。
-- `terminalProjects.outputBufferBytes`: Raw output retained for rebuilding a closed Terminal Surface. Default: about 2 MiB per session. / 用于重建终端页面的原始输出缓存，默认每个会话约 2 MiB。
 - `terminalProjects.shell`: Optional shell path. The system default is used when empty. / 可选 shell 路径，留空时使用系统默认值。
 - `terminalProjects.shellArgs`: Arguments passed to the shell. / 传递给 shell 的参数。
 
+字体、字号、主题、滚动缓冲区和 GPU 加速等显示选项直接使用 VS Code 的 `terminal.integrated.*` 设置。
+
+Font, size, theme, scrollback, GPU acceleration, and other display options use VS Code's `terminal.integrated.*` settings directly.
+
 ## Development / 本地开发
 
-Requires Node.js 22+, VS Code 1.95+, and the native build environment required by `node-pty`.
+Requires Node.js 22+ and VS Code 1.95+.
 
-需要 Node.js 22+、VS Code 1.95+，以及 `node-pty` 所需的本机原生构建环境。
+需要 Node.js 22+ 和 VS Code 1.95+。
 
 ```bash
 npm install

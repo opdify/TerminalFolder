@@ -216,8 +216,7 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
           ? this.terminals.list(folder.id).map((terminal) => ({
               id: terminal.id,
               name: terminal.name,
-              status: terminal.status,
-              exitCode: terminal.exitCode
+              status: terminal.status
             }))
           : []
       };

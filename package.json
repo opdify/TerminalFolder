@@ -2,7 +2,7 @@
   "name": "terminal-projects",
   "displayName": "Terminal Projects",
   "description": "Manage multiple independent terminals in one VS Code workspace, especially parallel Claude CLI sessions. 在一个 VS Code 工作区中管理多个独立终端，尤其适合并行运行多个 Claude CLI 会话。",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publisher": "opdify",
   "license": "SEE LICENSE IN LICENSE",
   "icon": "media/icon.png",
@@ -27,7 +27,7 @@
   ],
   "keywords": [
     "terminal",
-    "pty",
+    "native terminal",
     "projects",
     "remote ssh",
     "claude",
@@ -76,7 +76,7 @@
       },
       {
         "command": "terminalProjects.openSurface",
-        "title": "Terminal Projects: Open Terminal Surface",
+        "title": "Terminal Projects: Show Managed Terminal",
         "icon": "$(terminal)"
       },
       {
@@ -126,20 +126,6 @@
     "configuration": {
       "title": "Terminal Projects",
       "properties": {
-        "terminalProjects.scrollback": {
-          "type": "number",
-          "default": 5000,
-          "minimum": 100,
-          "maximum": 100000,
-          "description": "Maximum number of lines retained by each visible terminal frontend."
-        },
-        "terminalProjects.outputBufferBytes": {
-          "type": "number",
-          "default": 2097152,
-          "minimum": 65536,
-          "maximum": 33554432,
-          "description": "Approximate maximum raw output retained per terminal so a closed Terminal Surface can be reconstructed."
-        },
         "terminalProjects.shell": {
           "type": "string",
           "default": "",
@@ -159,28 +145,18 @@
     }
   },
   "scripts": {
-    "postinstall": "node ./scripts/fix-node-pty.mjs",
     "clean": "node ./scripts/clean.mjs",
     "build": "node ./esbuild.mjs",
     "watch": "node ./esbuild.mjs --watch",
     "check": "tsc --noEmit",
     "test": "vitest run",
-    "test:pty": "node ./scripts/acceptance-pty.mjs",
     "package": "npm run clean && npm run check && npm run test && npm run build && node ./scripts/package-vsix.mjs"
-  },
-  "dependencies": {
-    "node-pty": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
     "@types/vscode": "^1.95.0",
     "@vscode/vsce": "^3.6.0",
-    "@xterm/addon-fit": "^0.11.0",
-    "@xterm/addon-unicode11": "^0.9.0",
-    "@xterm/addon-webgl": "^0.19.0",
-    "@xterm/xterm": "^6.0.0",
     "esbuild": "^0.28.2",
-    "tree-kill": "^1.2.2",
     "typescript": "^7.0.0",
     "vitest": "^4.1.11"
   }

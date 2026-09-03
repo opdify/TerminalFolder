@@ -1,6 +1,6 @@
 # 发布指南
 
-Terminal Projects 依赖原生模块 `node-pty`，因此必须为每个目标平台分别构建和发布 VSIX。不要把一个平台生成的包发布成通用包。
+Terminal Projects 使用 VS Code 原生终端 API。为便于插件市场向不同系统分发，项目仍为四个目标平台分别构建并发布 VSIX。
 
 ## 首次准备
 
