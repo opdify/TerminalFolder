@@ -119,36 +119,36 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
         this.refresh();
         break;
       case 'addFolder':
-        void vscode.commands.executeCommand('terminalProjects.addFolder');
+        void vscode.commands.executeCommand('terminalFolder.addFolder');
         break;
       case 'addTerminal':
         if (folderId) {
-          void vscode.commands.executeCommand('terminalProjects.addTerminal', folderId);
+          void vscode.commands.executeCommand('terminalFolder.addTerminal', folderId);
         }
         break;
       case 'selectTerminal':
         if (terminalId) {
-          void vscode.commands.executeCommand('terminalProjects.selectTerminal', terminalId);
+          void vscode.commands.executeCommand('terminalFolder.selectTerminal', terminalId);
         }
         break;
       case 'renameFolder':
         if (folderId && name !== undefined) {
-          void vscode.commands.executeCommand('terminalProjects.renameFolder', folderId, name);
+          void vscode.commands.executeCommand('terminalFolder.renameFolder', folderId, name);
         }
         break;
       case 'removeFolder':
         if (folderId) {
-          void vscode.commands.executeCommand('terminalProjects.removeFolder', folderId);
+          void vscode.commands.executeCommand('terminalFolder.removeFolder', folderId);
         }
         break;
       case 'renameTerminal':
         if (terminalId && name !== undefined) {
-          void vscode.commands.executeCommand('terminalProjects.renameTerminal', terminalId, name);
+          void vscode.commands.executeCommand('terminalFolder.renameTerminal', terminalId, name);
         }
         break;
       case 'killTerminal':
         if (terminalId) {
-          void vscode.commands.executeCommand('terminalProjects.killTerminal', terminalId);
+          void vscode.commands.executeCommand('terminalFolder.killTerminal', terminalId);
         }
         break;
     }
@@ -205,10 +205,10 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="${styleUri}">
-  <title>Terminal Projects</title>
+  <title>TerminalFolder</title>
 </head>
 <body>
-  <main id="sidebar" class="sidebar" role="tree" aria-label="Terminal Projects"></main>
+  <main id="sidebar" class="sidebar" role="tree" aria-label="TerminalFolder"></main>
   <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;

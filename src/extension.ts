@@ -8,14 +8,14 @@ export function activate(context: vscode.ExtensionContext): void {
   const terminals = new TerminalManager();
   const sidebar = new SidebarViewProvider(context.extensionUri, folders, terminals);
   const sidebarRegistration = vscode.window.registerWebviewViewProvider(
-    'terminalProjects.folders',
+    'terminalFolder.folders',
     sidebar
   );
 
   context.subscriptions.push(terminals, sidebar, sidebarRegistration);
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('terminalProjects.addFolder', async (providedUri?: vscode.Uri) => {
+    vscode.commands.registerCommand('terminalFolder.addFolder', async (providedUri?: vscode.Uri) => {
       const uri =
         providedUri instanceof vscode.Uri
           ? providedUri
@@ -48,13 +48,13 @@ export function activate(context: vscode.ExtensionContext): void {
       const folder = await folders.add(uri);
       sidebar.expandFolder(folder.id);
       if (existing) {
-        void vscode.window.showInformationMessage(`${folder.name} is already in Terminal Projects.`);
+        void vscode.window.showInformationMessage(`${folder.name} is already in TerminalFolder.`);
       }
       return folder;
     }),
 
     vscode.commands.registerCommand(
-      'terminalProjects.addTerminal',
+      'terminalFolder.addTerminal',
       async (node: string | undefined) => {
         const folderId = typeof node === 'string' ? node : undefined;
         const folder = folderId ? folders.get(folderId) : undefined;
@@ -82,7 +82,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
 
     vscode.commands.registerCommand(
-      'terminalProjects.selectTerminal',
+      'terminalFolder.selectTerminal',
       (value: string | undefined) => {
         const terminalId = typeof value === 'string' ? value : undefined;
         if (!terminalId || !terminals.get(terminalId)) {
@@ -94,7 +94,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
 
     vscode.commands.registerCommand(
-      'terminalProjects.renameFolder',
+      'terminalFolder.renameFolder',
       async (node: string | undefined, providedName?: string) => {
         const folderId = typeof node === 'string' ? node : undefined;
         const folder = folderId ? folders.get(folderId) : undefined;
@@ -121,7 +121,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
 
     vscode.commands.registerCommand(
-      'terminalProjects.renameTerminal',
+      'terminalFolder.renameTerminal',
       async (node: string | undefined, providedName?: string) => {
         const terminalId = typeof node === 'string' ? node : undefined;
         const terminal = terminalId ? terminals.get(terminalId) : undefined;
@@ -148,7 +148,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
 
     vscode.commands.registerCommand(
-      'terminalProjects.killTerminal',
+      'terminalFolder.killTerminal',
       async (node: string | undefined) => {
         const terminalId = typeof node === 'string' ? node : undefined;
         if (terminalId) {
@@ -159,7 +159,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
 
     vscode.commands.registerCommand(
-      'terminalProjects.removeFolder',
+      'terminalFolder.removeFolder',
       async (node: string | undefined) => {
         const folderId = typeof node === 'string' ? node : undefined;
         const folder = folderId ? folders.get(folderId) : undefined;
@@ -185,11 +185,11 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     ),
 
-    vscode.commands.registerCommand('terminalProjects.openSurface', () => {
+    vscode.commands.registerCommand('terminalFolder.openSurface', () => {
       terminals.showSelected();
     }),
 
-    vscode.commands.registerCommand('terminalProjects.refresh', () => sidebar.refresh())
+    vscode.commands.registerCommand('terminalFolder.refresh', () => sidebar.refresh())
   );
 }
 

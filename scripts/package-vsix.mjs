@@ -30,7 +30,7 @@ const result = spawnSync(
     '--target',
     target,
     '--out',
-    `terminal-projects-${manifest.version}-${target}.vsix`
+    `terminal-folder-${manifest.version}-${target}.vsix`
   ],
   { stdio: 'inherit' }
 );

@@ -65,7 +65,7 @@ export class TerminalManager implements vscode.Disposable {
       return;
     }
     void vscode.window.showInformationMessage(
-      'Create or select a managed terminal in Terminal Projects first.'
+      'Create or select a managed terminal in TerminalFolder first.'
     );
   }
 
@@ -170,7 +170,7 @@ export class TerminalManager implements vscode.Disposable {
 }
 
 function terminalOptions(folder: StoredFolder, name: string): vscode.TerminalOptions {
-  const configuration = vscode.workspace.getConfiguration('terminalProjects');
+  const configuration = vscode.workspace.getConfiguration('terminalFolder');
   const shellPath = configuration.get<string>('shell', '').trim();
   const shellArgs = configuration
     .get<string[]>('shellArgs', [])

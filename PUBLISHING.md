@@ -1,6 +1,6 @@
 # 发布指南
 
-Terminal Projects 使用 VS Code 原生终端 API。为便于插件市场向不同系统分发，项目仍为四个目标平台分别构建并发布 VSIX。
+TerminalFolder 使用 VS Code 原生终端 API。为便于插件市场向不同系统分发，项目仍为四个目标平台分别构建并发布 VSIX。
 
 ## 首次准备
 
@@ -24,7 +24,7 @@ npm ci
 npm run check
 npm test
 npm run build
-npx vsce package --target <target> --out terminal-projects-<target>.vsix
+npx vsce package --target <target> --out terminal-folder-<target>.vsix
 ```
 
 ## 首次发布
@@ -35,10 +35,10 @@ npx vsce package --target <target> --out terminal-projects-<target>.vsix
 
 ```bash
 npx vsce login opdify
-npx vsce publish --packagePath terminal-projects-linux-x64.vsix
-npx vsce publish --packagePath terminal-projects-darwin-x64.vsix
-npx vsce publish --packagePath terminal-projects-darwin-arm64.vsix
-npx vsce publish --packagePath terminal-projects-win32-x64.vsix
+npx vsce publish --packagePath terminal-folder-linux-x64.vsix
+npx vsce publish --packagePath terminal-folder-darwin-x64.vsix
+npx vsce publish --packagePath terminal-folder-darwin-arm64.vsix
+npx vsce publish --packagePath terminal-folder-win32-x64.vsix
 ```
 
 如果发布者 ID 不是 `opdify`，登录命令和 `package.json` 都要使用实际 ID。

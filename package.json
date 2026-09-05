@@ -1,8 +1,8 @@
 {
-  "name": "terminal-projects",
-  "displayName": "Terminal Projects",
-  "description": "Manage multiple independent terminals in one VS Code workspace, especially parallel Claude CLI sessions. 在一个 VS Code 工作区中管理多个独立终端，尤其适合并行运行多个 Claude CLI 会话。",
-  "version": "0.1.7",
+  "name": "terminal-folder",
+  "displayName": "TerminalFolder",
+  "description": "Manage multiple independent terminals by working folder, especially parallel Claude CLI sessions. 按工作目录管理多个独立终端，尤其适合并行运行多个 Claude CLI 会话。",
+  "version": "0.1.0",
   "publisher": "opdify",
   "license": "SEE LICENSE IN LICENSE",
   "icon": "media/icon.png",
@@ -13,11 +13,11 @@
   "pricing": "Free",
   "repository": {
     "type": "git",
-    "url": "https://github.com/opdify/vscode-terminal-projects.git"
+    "url": "https://github.com/opdify/TerminalFolder.git"
   },
-  "homepage": "https://github.com/opdify/vscode-terminal-projects#readme",
+  "homepage": "https://github.com/opdify/TerminalFolder#readme",
   "bugs": {
-    "url": "https://github.com/opdify/vscode-terminal-projects/issues"
+    "url": "https://github.com/opdify/TerminalFolder/issues"
   },
   "engines": {
     "vscode": "^1.95.0"
@@ -38,54 +38,54 @@
     "workspace"
   ],
   "activationEvents": [
-    "onView:terminalProjects.folders",
-    "onCommand:terminalProjects.addFolder",
-    "onCommand:terminalProjects.openSurface"
+    "onView:terminalFolder.folders",
+    "onCommand:terminalFolder.addFolder",
+    "onCommand:terminalFolder.openSurface"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "terminalProjects.addFolder",
-        "title": "Terminal Projects: Add Folder",
+        "command": "terminalFolder.addFolder",
+        "title": "TerminalFolder: Add Folder",
         "icon": "$(folder-opened)"
       },
       {
-        "command": "terminalProjects.removeFolder",
+        "command": "terminalFolder.removeFolder",
         "title": "Remove Folder",
         "icon": "$(trash)"
       },
       {
-        "command": "terminalProjects.renameFolder",
+        "command": "terminalFolder.renameFolder",
         "title": "Rename Folder",
         "icon": "$(edit)"
       },
       {
-        "command": "terminalProjects.addTerminal",
+        "command": "terminalFolder.addTerminal",
         "title": "New Terminal",
         "icon": "$(add)"
       },
       {
-        "command": "terminalProjects.selectTerminal",
+        "command": "terminalFolder.selectTerminal",
         "title": "Show Terminal"
       },
       {
-        "command": "terminalProjects.renameTerminal",
+        "command": "terminalFolder.renameTerminal",
         "title": "Rename Terminal",
         "icon": "$(edit)"
       },
       {
-        "command": "terminalProjects.killTerminal",
+        "command": "terminalFolder.killTerminal",
         "title": "Kill Terminal",
         "icon": "$(trash)"
       },
       {
-        "command": "terminalProjects.openSurface",
-        "title": "Terminal Projects: Show Managed Terminal",
+        "command": "terminalFolder.openSurface",
+        "title": "TerminalFolder: Show Managed Terminal",
         "icon": "$(terminal)"
       },
       {
-        "command": "terminalProjects.refresh",
+        "command": "terminalFolder.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       }
@@ -93,17 +93,17 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "terminalProjects",
-          "title": "Terminal Projects",
+          "id": "terminalFolder",
+          "title": "TerminalFolder",
           "icon": "media/activity-terminal.svg"
         }
       ]
     },
     "views": {
-      "terminalProjects": [
+      "terminalFolder": [
         {
-          "id": "terminalProjects.folders",
-          "name": "Terminal Projects",
+          "id": "terminalFolder.folders",
+          "name": "TerminalFolder",
           "type": "webview",
           "icon": "media/activity-terminal.svg"
         }
@@ -112,32 +112,32 @@
     "menus": {
       "view/title": [
         {
-          "command": "terminalProjects.addFolder",
-          "when": "view == terminalProjects.folders",
+          "command": "terminalFolder.addFolder",
+          "when": "view == terminalFolder.folders",
           "group": "navigation@1"
         },
         {
-          "command": "terminalProjects.openSurface",
-          "when": "view == terminalProjects.folders",
+          "command": "terminalFolder.openSurface",
+          "when": "view == terminalFolder.folders",
           "group": "navigation@2"
         },
         {
-          "command": "terminalProjects.refresh",
-          "when": "view == terminalProjects.folders",
+          "command": "terminalFolder.refresh",
+          "when": "view == terminalFolder.folders",
           "group": "navigation@3"
         }
       ]
     },
     "configuration": {
-      "title": "Terminal Projects",
+      "title": "TerminalFolder",
       "properties": {
-        "terminalProjects.shell": {
+        "terminalFolder.shell": {
           "type": "string",
           "default": "",
           "scope": "machine-overridable",
           "description": "Optional shell executable. Empty uses the remote or local extension host's normal default shell."
         },
-        "terminalProjects.shellArgs": {
+        "terminalFolder.shellArgs": {
           "type": "array",
           "items": {
             "type": "string"

@@ -31,8 +31,8 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run build
-      - run: npx vsce package --target ${{ matrix.target }} --out terminal-projects-${{ matrix.target }}.vsix
+      - run: npx vsce package --target ${{ matrix.target }} --out terminal-folder-${{ matrix.target }}.vsix
       - uses: actions/upload-artifact@v6
         with:
-          name: terminal-projects-${{ matrix.target }}
-          path: terminal-projects-${{ matrix.target }}.vsix
+          name: terminal-folder-${{ matrix.target }}
+          path: terminal-folder-${{ matrix.target }}.vsix

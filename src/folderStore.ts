@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { normalizeManagementName } from './managementName';
 import type { StoredFolder } from './model';
 
-const STORAGE_KEY = 'terminalProjects.folders.v1';
+const STORAGE_KEY = 'terminalFolder.folders.v1';
 
 export class FolderStore {
   private folders: StoredFolder[];
