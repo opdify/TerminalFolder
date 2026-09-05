@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import * as vscode from 'vscode';
+import { normalizeManagementName } from './managementName';
 import type { StoredFolder, TerminalStatus } from './model';
 import { nextTerminalName } from './terminalNaming';
 
@@ -63,7 +64,9 @@ export class TerminalManager implements vscode.Disposable {
       selected.terminal.show(false);
       return;
     }
-    void vscode.commands.executeCommand('workbench.action.terminal.toggleTerminal');
+    void vscode.window.showInformationMessage(
+      'Create or select a managed terminal in Terminal Projects first.'
+    );
   }
 
   public create(folder: StoredFolder): ManagedTerminalSession {
@@ -88,7 +91,7 @@ export class TerminalManager implements vscode.Disposable {
 
   public rename(id: string, name: string): void {
     const session = this.sessions.get(id);
-    const normalized = name.trim();
+    const normalized = normalizeManagementName(name);
     if (!session || !normalized) {
       return;
     }
@@ -164,7 +167,6 @@ export class TerminalManager implements vscode.Disposable {
     this.selectedId = id;
     this.changeEmitter.fire();
   }
-
 }
 
 function terminalOptions(folder: StoredFolder, name: string): vscode.TerminalOptions {
@@ -176,7 +178,8 @@ function terminalOptions(folder: StoredFolder, name: string): vscode.TerminalOpt
   const options: vscode.TerminalOptions = {
     name,
     cwd: vscode.Uri.parse(folder.uri),
-    iconPath: new vscode.ThemeIcon('terminal')
+    iconPath: new vscode.ThemeIcon('terminal'),
+    location: vscode.TerminalLocation.Editor
   };
   if (shellPath) {
     options.shellPath = shellPath;

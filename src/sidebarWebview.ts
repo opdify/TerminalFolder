@@ -27,10 +27,17 @@ interface HostMessage {
   readonly activeTerminalId?: unknown;
 }
 
+type ContextTarget =
+  | { readonly kind: 'folder'; readonly id: string; readonly name: string }
+  | { readonly kind: 'terminal'; readonly id: string; readonly name: string };
+
+type IconName = 'folder' | 'folder-opened' | 'add' | 'edit' | 'trash';
+
 const vscode = acquireVsCodeApi();
 const sidebar = requiredElement('sidebar');
 
 let selectedKey: string | undefined;
+let contextMenu: HTMLElement | undefined;
 
 window.addEventListener('message', (event: MessageEvent<HostMessage>) => {
   const message = event.data;
@@ -48,6 +55,9 @@ sidebar.addEventListener('click', (event) => {
   if (!(target instanceof Element)) {
     return;
   }
+  if (target.closest('.row__rename-input')) {
+    return;
+  }
   const action = target.closest<HTMLElement>('[data-action]');
   if (!action) {
     return;
@@ -60,16 +70,23 @@ sidebar.addEventListener('contextmenu', (event) => {
   if (!(target instanceof Element)) {
     return;
   }
+  if (target.closest('.row__rename-input')) {
+    return;
+  }
   const row = target.closest<HTMLElement>('[data-row-kind]');
   if (!row) {
     return;
   }
   event.preventDefault();
-  if (row.dataset.rowKind === 'folder' && row.dataset.folderId) {
-    vscode.postMessage({ type: 'folderMenu', folderId: row.dataset.folderId });
-  } else if (row.dataset.rowKind === 'terminal' && row.dataset.terminalId) {
-    vscode.postMessage({ type: 'terminalMenu', terminalId: row.dataset.terminalId });
+  event.stopPropagation();
+
+  const contextTarget = contextTargetFromRow(row);
+  if (!contextTarget) {
+    return;
   }
+  selectedKey = `${contextTarget.kind}:${contextTarget.id}`;
+  updateSelectedRow();
+  showContextMenu(contextTarget, event.clientX, event.clientY);
 });
 
 sidebar.addEventListener('keydown', (event) => {
@@ -80,6 +97,9 @@ sidebar.addEventListener('keydown', (event) => {
   if (!(target instanceof HTMLElement)) {
     return;
   }
+  if (target.closest('.row__rename-input')) {
+    return;
+  }
   const row = target.closest<HTMLElement>('[data-primary-action]');
   if (!row || target.closest('.row__action')) {
     return;
@@ -87,6 +107,22 @@ sidebar.addEventListener('keydown', (event) => {
   event.preventDefault();
   handlePrimaryAction(row);
 });
+
+document.addEventListener('pointerdown', (event) => {
+  const target = event.target;
+  if (contextMenu && target instanceof Node && !contextMenu.contains(target)) {
+    closeContextMenu();
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    closeContextMenu();
+  }
+});
+
+window.addEventListener('blur', closeContextMenu);
+window.addEventListener('resize', closeContextMenu);
 
 vscode.postMessage({ type: 'ready' });
 
@@ -131,6 +167,7 @@ function createFolderRow(folder: SidebarFolder, selected: boolean): HTMLElement 
   row.title = folder.path;
   row.dataset.rowKind = 'folder';
   row.dataset.folderId = folder.id;
+  row.dataset.name = folder.name;
   row.dataset.primaryAction = 'toggleFolder';
   row.dataset.action = 'toggleFolder';
 
@@ -145,7 +182,6 @@ function createFolderRow(folder: SidebarFolder, selected: boolean): HTMLElement 
   const actions = document.createElement('span');
   actions.className = 'row__actions';
   actions.append(
-    createActionButton('more', 'Folder actions', 'folderMenu', { folderId: folder.id }),
     createActionButton('add', `New terminal in ${folder.name}`, 'addTerminal', {
       folderId: folder.id
     })
@@ -172,6 +208,7 @@ function createTerminalRow(
   row.dataset.rowKind = 'terminal';
   row.dataset.folderId = folderId;
   row.dataset.terminalId = terminal.id;
+  row.dataset.name = terminal.name;
   row.dataset.primaryAction = 'selectTerminal';
   row.dataset.action = 'selectTerminal';
 
@@ -179,15 +216,7 @@ function createTerminalRow(
   label.className = 'row__label';
   label.textContent = terminal.name;
 
-  const actions = document.createElement('span');
-  actions.className = 'row__actions';
-  actions.append(
-    createActionButton('more', 'Terminal actions', 'terminalMenu', {
-      terminalId: terminal.id
-    })
-  );
-
-  row.append(label, actions);
+  row.append(label);
   return row;
 }
 
@@ -211,7 +240,7 @@ function createAddFolderRow(): HTMLElement {
 }
 
 function createActionButton(
-  icon: 'more' | 'add',
+  icon: 'add',
   title: string,
   action: string,
   data: { folderId?: string; terminalId?: string }
@@ -277,7 +306,151 @@ function updateSelectedRow(): void {
   }
 }
 
-function createIcon(name: 'folder' | 'folder-opened' | 'add' | 'more'): SVGSVGElement {
+function showContextMenu(target: ContextTarget, x: number, y: number): void {
+  closeContextMenu();
+
+  const menu = document.createElement('div');
+  menu.className = 'context-menu';
+  menu.setAttribute('role', 'menu');
+  menu.setAttribute('aria-label', `${target.name} actions`);
+  menu.append(
+    createContextMenuItem('edit', 'Rename', () => beginInlineRename(target)),
+    createContextMenuItem('trash', 'Delete', () => {
+      if (target.kind === 'folder') {
+        vscode.postMessage({ type: 'removeFolder', folderId: target.id });
+      } else {
+        vscode.postMessage({ type: 'killTerminal', terminalId: target.id });
+      }
+    })
+  );
+  menu.addEventListener('keydown', (event) => {
+    const items = [...menu.querySelectorAll<HTMLButtonElement>('.context-menu__item')];
+    const index = items.indexOf(document.activeElement as HTMLButtonElement);
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const direction = event.key === 'ArrowDown' ? 1 : -1;
+      items[(index + direction + items.length) % items.length]?.focus();
+    }
+  });
+
+  document.body.append(menu);
+  contextMenu = menu;
+
+  const margin = 4;
+  const bounds = menu.getBoundingClientRect();
+  menu.style.left = `${Math.max(margin, Math.min(x, window.innerWidth - bounds.width - margin))}px`;
+  menu.style.top = `${Math.max(margin, Math.min(y, window.innerHeight - bounds.height - margin))}px`;
+  menu.querySelector<HTMLButtonElement>('.context-menu__item')?.focus({ preventScroll: true });
+}
+
+function createContextMenuItem(
+  icon: 'edit' | 'trash',
+  label: string,
+  action: () => void
+): HTMLButtonElement {
+  const item = document.createElement('button');
+  item.className = 'context-menu__item';
+  item.type = 'button';
+  item.setAttribute('role', 'menuitem');
+
+  const iconContainer = document.createElement('span');
+  iconContainer.className = 'context-menu__icon';
+  iconContainer.append(createIcon(icon));
+
+  const text = document.createElement('span');
+  text.textContent = label;
+  item.append(iconContainer, text);
+  item.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeContextMenu();
+    action();
+  });
+  return item;
+}
+
+function closeContextMenu(): void {
+  contextMenu?.remove();
+  contextMenu = undefined;
+}
+
+function beginInlineRename(target: ContextTarget): void {
+  const row = findTargetRow(target);
+  const label = row?.querySelector<HTMLElement>('.row__label');
+  if (!row || !label) {
+    return;
+  }
+
+  const input = document.createElement('input');
+  input.className = 'row__rename-input';
+  input.type = 'text';
+  input.value = target.name;
+  input.setAttribute('aria-label', `Rename ${target.kind}`);
+
+  let finished = false;
+  const finish = (commit: boolean): void => {
+    if (finished) {
+      return;
+    }
+    finished = true;
+    const name = input.value.trim();
+    if (commit && name) {
+      label.textContent = name;
+      row.dataset.name = name;
+      if (name !== target.name) {
+        vscode.postMessage(
+          target.kind === 'folder'
+            ? { type: 'renameFolder', folderId: target.id, name }
+            : { type: 'renameTerminal', terminalId: target.id, name }
+        );
+      }
+    }
+    input.replaceWith(label);
+    row.focus({ preventScroll: true });
+  };
+
+  input.addEventListener('click', (event) => event.stopPropagation());
+  input.addEventListener('keydown', (event) => {
+    event.stopPropagation();
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      finish(true);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      finish(false);
+    }
+  });
+  input.addEventListener('blur', () => finish(true));
+
+  label.replaceWith(input);
+  input.focus({ preventScroll: true });
+  input.select();
+}
+
+function contextTargetFromRow(row: HTMLElement): ContextTarget | undefined {
+  const name = row.dataset.name;
+  if (!name) {
+    return undefined;
+  }
+  if (row.dataset.rowKind === 'folder' && row.dataset.folderId) {
+    return { kind: 'folder', id: row.dataset.folderId, name };
+  }
+  if (row.dataset.rowKind === 'terminal' && row.dataset.terminalId) {
+    return { kind: 'terminal', id: row.dataset.terminalId, name };
+  }
+  return undefined;
+}
+
+function findTargetRow(target: ContextTarget): HTMLElement | undefined {
+  return [...sidebar.querySelectorAll<HTMLElement>('[data-row-kind]')].find((row) => {
+    if (target.kind === 'folder') {
+      return row.dataset.rowKind === 'folder' && row.dataset.folderId === target.id;
+    }
+    return row.dataset.rowKind === 'terminal' && row.dataset.terminalId === target.id;
+  });
+}
+
+function createIcon(name: IconName): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('icon');
   svg.setAttribute('viewBox', '0 0 24 24');
@@ -300,9 +473,11 @@ function createIcon(name: 'folder' | 'folder-opened' | 'add' | 'more'): SVGSVGEl
     case 'add':
       path.setAttribute('d', 'M12 5v14M5 12h14');
       break;
-    case 'more':
-      path.setAttribute('d', 'M6.5 12h.01M12 12h.01M17.5 12h.01');
-      path.setAttribute('stroke-width', '3');
+    case 'edit':
+      path.setAttribute('d', 'm4.5 19.5 4.1-1 10-10a2.1 2.1 0 0 0-3-3l-10 10-1.1 4Z');
+      break;
+    case 'trash':
+      path.setAttribute('d', 'M5 7h14M9 7V4.8h6V7m2 0-1 12H8L7 7m3 3v6m4-6v6');
       break;
   }
   svg.append(path);

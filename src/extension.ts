@@ -94,22 +94,52 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
 
     vscode.commands.registerCommand(
+      'terminalProjects.renameFolder',
+      async (node: string | undefined, providedName?: string) => {
+        const folderId = typeof node === 'string' ? node : undefined;
+        const folder = folderId ? folders.get(folderId) : undefined;
+        if (!folder) {
+          return;
+        }
+
+        const name =
+          typeof providedName === 'string'
+            ? providedName
+            : await vscode.window.showInputBox({
+                title: 'Rename Folder',
+                prompt: 'Folder management name (does not rename the directory)',
+                value: folder.name,
+                valueSelection: [0, folder.name.length],
+                validateInput: (value) => (value.trim() ? undefined : 'Name cannot be empty.')
+              });
+        if (!name?.trim()) {
+          return;
+        }
+        await folders.rename(folder.id, name);
+        sidebar.refresh();
+      }
+    ),
+
+    vscode.commands.registerCommand(
       'terminalProjects.renameTerminal',
-      async (node: string | undefined) => {
+      async (node: string | undefined, providedName?: string) => {
         const terminalId = typeof node === 'string' ? node : undefined;
         const terminal = terminalId ? terminals.get(terminalId) : undefined;
         if (!terminal) {
           return;
         }
 
-        const name = await vscode.window.showInputBox({
-          title: 'Rename Terminal',
-          prompt: 'Terminal management name (does not affect the shell)',
-          value: terminal.name,
-          valueSelection: [0, terminal.name.length],
-          validateInput: (value) => (value.trim() ? undefined : 'Name cannot be empty.')
-        });
-        if (!name) {
+        const name =
+          typeof providedName === 'string'
+            ? providedName
+            : await vscode.window.showInputBox({
+                title: 'Rename Terminal',
+                prompt: 'Terminal management name (does not affect the shell)',
+                value: terminal.name,
+                valueSelection: [0, terminal.name.length],
+                validateInput: (value) => (value.trim() ? undefined : 'Name cannot be empty.')
+              });
+        if (!name?.trim()) {
           return;
         }
         terminals.rename(terminal.id, name);

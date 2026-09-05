@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { normalizeManagementName } from './managementName';
 import type { StoredFolder } from './model';
 
 const STORAGE_KEY = 'terminalProjects.folders.v1';
@@ -45,6 +46,21 @@ export class FolderStore {
   public async remove(id: string): Promise<void> {
     this.folders = this.folders.filter((folder) => folder.id !== id);
     await this.persist();
+  }
+
+  public async rename(id: string, name: string): Promise<StoredFolder | undefined> {
+    const folder = this.get(id);
+    const normalized = normalizeManagementName(name);
+    if (!folder || !normalized) {
+      return undefined;
+    }
+
+    const renamed: StoredFolder = { ...folder, name: normalized };
+    this.folders = this.folders.map((candidate) =>
+      candidate.id === id ? renamed : candidate
+    );
+    await this.persist();
+    return renamed;
   }
 
   private readStoredFolders(): StoredFolder[] {

@@ -54,10 +54,17 @@ body {
   border-color: var(--vscode-focusBorder);
 }
 
-.row--selected {
-  border-color: var(--vscode-focusBorder);
-  background: var(--vscode-list-activeSelectionBackground);
-  color: var(--vscode-list-activeSelectionForeground);
+.row--selected,
+.row--selected:focus-visible {
+  border-color: transparent;
+  background: var(
+    --vscode-list-inactiveSelectionBackground,
+    var(--vscode-list-activeSelectionBackground)
+  );
+  color: var(
+    --vscode-list-inactiveSelectionForeground,
+    var(--vscode-list-activeSelectionForeground)
+  );
 }
 
 .row--terminal {
@@ -142,4 +149,70 @@ body {
 .row__action .icon {
   width: 19px;
   height: 19px;
+}
+
+.row__rename-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 27px;
+  margin: 0;
+  padding: 1px 5px;
+  border: 1px solid var(--vscode-focusBorder);
+  border-radius: 2px;
+  outline: none;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  font: inherit;
+  line-height: 23px;
+  user-select: text;
+}
+
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 4px;
+  border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border));
+  border-radius: 5px;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  background: var(--vscode-menu-background, var(--vscode-editorWidget-background));
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow);
+}
+
+.context-menu__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 3px;
+  outline: none;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.context-menu__item:hover,
+.context-menu__item:focus-visible {
+  color: var(--vscode-menu-selectionForeground, var(--vscode-list-activeSelectionForeground));
+  background: var(--vscode-menu-selectionBackground, var(--vscode-list-activeSelectionBackground));
+}
+
+.context-menu__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 7px;
+}
+
+.context-menu__icon .icon {
+  width: 17px;
+  height: 17px;
 }

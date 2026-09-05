@@ -7,6 +7,7 @@ interface SidebarMessage {
   readonly type?: unknown;
   readonly folderId?: unknown;
   readonly terminalId?: unknown;
+  readonly name?: unknown;
 }
 
 interface SidebarTerminal {
@@ -22,12 +23,6 @@ interface SidebarFolder {
   readonly path: string;
   readonly expanded: boolean;
   readonly terminals: SidebarTerminal[];
-}
-
-interface SidebarAction {
-  readonly label: string;
-  readonly description: string;
-  readonly command: string;
 }
 
 export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
@@ -107,6 +102,7 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
 
     const folderId = typeof message.folderId === 'string' ? message.folderId : undefined;
     const terminalId = typeof message.terminalId === 'string' ? message.terminalId : undefined;
+    const name = typeof message.name === 'string' ? message.name : undefined;
 
     switch (message.type) {
       case 'ready':
@@ -135,69 +131,26 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
           void vscode.commands.executeCommand('terminalProjects.selectTerminal', terminalId);
         }
         break;
-      case 'folderMenu':
+      case 'renameFolder':
+        if (folderId && name !== undefined) {
+          void vscode.commands.executeCommand('terminalProjects.renameFolder', folderId, name);
+        }
+        break;
+      case 'removeFolder':
         if (folderId) {
-          void this.showFolderMenu(folderId);
+          void vscode.commands.executeCommand('terminalProjects.removeFolder', folderId);
         }
         break;
-      case 'terminalMenu':
+      case 'renameTerminal':
+        if (terminalId && name !== undefined) {
+          void vscode.commands.executeCommand('terminalProjects.renameTerminal', terminalId, name);
+        }
+        break;
+      case 'killTerminal':
         if (terminalId) {
-          void this.showTerminalMenu(terminalId);
+          void vscode.commands.executeCommand('terminalProjects.killTerminal', terminalId);
         }
         break;
-    }
-  }
-
-  private async showFolderMenu(folderId: string): Promise<void> {
-    const folder = this.folders.get(folderId);
-    if (!folder) {
-      return;
-    }
-    const selection = await vscode.window.showQuickPick<SidebarAction>(
-      [
-        {
-          label: '$(add) New Terminal',
-          description: 'Create an independent terminal in this folder',
-          command: 'terminalProjects.addTerminal'
-        },
-        {
-          label: '$(trash) Remove Folder',
-          description: 'Remove this folder from Terminal Projects',
-          command: 'terminalProjects.removeFolder'
-        }
-      ],
-      { title: folder.name, placeHolder: 'Choose a folder action' }
-    );
-    if (selection) {
-      await vscode.commands.executeCommand(selection.command, folderId);
-    }
-  }
-
-  private async showTerminalMenu(terminalId: string): Promise<void> {
-    const terminal = this.terminals.get(terminalId);
-    if (!terminal) {
-      return;
-    }
-    const selection = await vscode.window.showQuickPick<SidebarAction>(
-      [
-        {
-          label: '$(edit) Rename Terminal',
-          description: 'Change the terminal management name',
-          command: 'terminalProjects.renameTerminal'
-        },
-        {
-          label: terminal.status === 'running' ? '$(trash) Kill Terminal' : '$(trash) Remove Terminal',
-          description:
-            terminal.status === 'running'
-              ? 'Terminate the process tree and remove this terminal'
-              : 'Remove this exited terminal',
-          command: 'terminalProjects.killTerminal'
-        }
-      ],
-      { title: terminal.name, placeHolder: 'Choose a terminal action' }
-    );
-    if (selection) {
-      await vscode.commands.executeCommand(selection.command, terminalId);
     }
   }
 
