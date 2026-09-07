@@ -10,4 +10,5 @@
 - 终端在编辑器区域打开，可与右侧 Auxiliary Bar 中的管理视图同时显示。
 - 支持多个 Claude CLI 会话、普通命令、ANSI/TUI、复制粘贴和 Remote SSH。
 - Folder 和 Terminal 支持鼠标位置的右键菜单、行内重命名与删除。
+- 新建终端后，侧边栏选中背景会立即跟随到新终端。
 - 为 macOS、Linux 和 Windows 生成平台专用 VSIX。

@@ -1,4 +1,5 @@
 import './sidebar.css';
+import { selectedKeyForActiveTerminal } from './sidebarSelection';
 
 interface VsCodeApi {
   postMessage(message: unknown): void;
@@ -37,6 +38,7 @@ const vscode = acquireVsCodeApi();
 const sidebar = requiredElement('sidebar');
 
 let selectedKey: string | undefined;
+let lastActiveTerminalId: string | undefined;
 let contextMenu: HTMLElement | undefined;
 
 window.addEventListener('message', (event: MessageEvent<HostMessage>) => {
@@ -47,6 +49,12 @@ window.addEventListener('message', (event: MessageEvent<HostMessage>) => {
   const folders = message.folders.filter(isSidebarFolder);
   const activeTerminalId =
     typeof message.activeTerminalId === 'string' ? message.activeTerminalId : undefined;
+  selectedKey = selectedKeyForActiveTerminal(
+    selectedKey,
+    lastActiveTerminalId,
+    activeTerminalId
+  );
+  lastActiveTerminalId = activeTerminalId;
   render(folders, activeTerminalId);
 });
 

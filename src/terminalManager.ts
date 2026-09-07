@@ -85,7 +85,7 @@ export class TerminalManager implements vscode.Disposable {
       terminal
     };
     this.sessions.set(session.id, session);
-    this.changeEmitter.fire();
+    this.setSelected(session.id);
     return session;
   }
 
