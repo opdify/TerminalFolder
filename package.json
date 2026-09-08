@@ -2,7 +2,7 @@
   "name": "terminal-folder",
   "displayName": "TerminalFolder",
   "description": "Manage multiple independent terminals by working folder, especially parallel Claude CLI sessions. 按工作目录管理多个独立终端，尤其适合并行运行多个 Claude CLI 会话。",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "opdify",
   "license": "SEE LICENSE IN LICENSE",
   "icon": "media/icon.png",
