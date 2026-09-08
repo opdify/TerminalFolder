@@ -5,7 +5,7 @@ import { TerminalManager } from './terminalManager';
 
 export function activate(context: vscode.ExtensionContext): void {
   const folders = new FolderStore(context.workspaceState);
-  const terminals = new TerminalManager();
+  const terminals = new TerminalManager(context.workspaceState, folders.list());
   const sidebar = new SidebarViewProvider(context.extensionUri, folders, terminals);
   const sidebarRegistration = vscode.window.registerWebviewViewProvider(
     'terminalFolder.folders',
@@ -177,8 +177,9 @@ export function activate(context: vscode.ExtensionContext): void {
           if (choice !== 'Remove and Kill') {
             return;
           }
-          await terminals.killFolder(folder.id);
         }
+
+        await terminals.killFolder(folder.id);
 
         await folders.remove(folder.id);
         sidebar.removeFolder(folder.id);

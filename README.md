@@ -28,6 +28,7 @@ TerminalFolder 是一款 VS Code 多终端管理插件。它可以在一个 VS C
 - 通过 TerminalFolder 视图快速展开、收起和切换会话。
 - 终端显示在编辑器区域，不会与右侧 Auxiliary Bar 中的管理视图互相替换。
 - 隐藏的终端继续运行并接收输出，不会因为切换而重建进程。
+- 正常重新加载 VS Code 窗口后，文件夹中的托管终端与当前选中状态会随原生终端一起恢复。
 - 原生支持 ANSI、TUI、Ctrl+C/Ctrl+D、方向键、Tab、窗口 resize、复制和粘贴。
 - 右键 Folder 或 Terminal 可在鼠标位置重命名和删除，重命名直接在当前行内完成。
 
@@ -61,6 +62,7 @@ Every terminal has its own shell, working directory, processes, and output strea
 - Expand, collapse, and switch sessions from the TerminalFolder Activity Bar view.
 - Open terminals in the editor area without replacing the management view in the right Auxiliary Bar.
 - Keep hidden terminals running and receiving output without recreating their processes.
+- Restore managed terminal entries and the active selection alongside VS Code's native terminals after a normal window reload.
 - Natively support ANSI, TUI applications, Ctrl+C/Ctrl+D, arrow keys, Tab, resize, copy, and paste.
 - Right-click a folder or terminal to rename it inline or delete it from a menu at the pointer.
 

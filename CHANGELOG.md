@@ -11,4 +11,5 @@
 - 支持多个 Claude CLI 会话、普通命令、ANSI/TUI、复制粘贴和 Remote SSH。
 - Folder 和 Terminal 支持鼠标位置的右键菜单、行内重命名与删除。
 - 新建终端后，侧边栏选中背景会立即跟随到新终端。
+- 正常重载 VS Code 窗口后，恢复文件夹中的托管终端列表与选中状态。
 - 为 macOS、Linux 和 Windows 生成平台专用 VSIX。
