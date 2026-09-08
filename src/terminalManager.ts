@@ -4,6 +4,10 @@ import * as vscode from 'vscode';
 import { normalizeManagementName } from './managementName';
 import type { StoredFolder, TerminalStatus } from './model';
 import {
+  pathsReferToSameDirectory,
+  resolveProcessWorkingDirectory
+} from './processCwd';
+import {
   findStoredTerminalSession,
   findStoredTerminalSessionByProcessId,
   findUnidentifiedStoredTerminalSessionByFolder,
@@ -337,22 +341,10 @@ export class TerminalManager implements vscode.Disposable {
       (isLegacyManagedTerminalName(descriptor.terminalName) ||
         isStrippedRestoredOptions(options))
     ) {
-      const managementName = isLegacyManagedTerminalName(descriptor.terminalName)
-        ? descriptor.terminalName
-        : nextTerminalName(
-            [...this.storedSessions.values()]
-              .filter((session) => session.folderId === descriptor.folderId)
-              .map((session) => session.name)
-          );
-      stored = {
-        id: randomUUID(),
-        folderId: descriptor.folderId,
-        name: managementName,
-        terminalName: descriptor.terminalName,
-        createdAt: Date.now() + this.restoreOrdinal++
-      };
-      this.storedSessions.set(stored.id, stored);
-      void this.queuePersist();
+      stored = this.createLegacyStoredSession(
+        descriptor.folderId,
+        descriptor.terminalName
+      );
     }
 
     return stored ? this.attachTerminal(stored, terminal) : undefined;
@@ -405,17 +397,41 @@ export class TerminalManager implements vscode.Disposable {
       return;
     }
     this.pendingProcessRestores.add(terminal);
-    void terminal.processId.then((processId) => {
+    void terminal.processId.then(async (processId) => {
       if (!processId || this.disposed || this.sessionForTerminal(terminal)) {
         return;
       }
-      const descriptor = this.restoreDescriptor(terminal);
-      const stored = findStoredTerminalSessionByProcessId(
+      let descriptor = this.restoreDescriptor(terminal);
+      let stored = findStoredTerminalSessionByProcessId(
         this.storedSessions.values(),
         new Set(this.sessions.keys()),
         processId,
         descriptor.folderId
       );
+      if (!stored && this.legacyCandidates.has(terminal)) {
+        let folderId = descriptor.folderId;
+        if (!folderId) {
+          const cwd = await resolveProcessWorkingDirectory(processId);
+          if (this.disposed || this.sessionForTerminal(terminal)) {
+            return;
+          }
+          folderId = (await this.folderForProcessCwd(cwd))?.id;
+          descriptor = { ...descriptor, folderId };
+        }
+        if (folderId) {
+          stored = findUnidentifiedStoredTerminalSessionByFolder(
+            this.storedSessions.values(),
+            new Set(this.sessions.keys()),
+            folderId
+          );
+          if (!stored && this.allowUntrackedLegacyAdoption) {
+            stored = this.createLegacyStoredSession(
+              folderId,
+              descriptor.terminalName
+            );
+          }
+        }
+      }
       if (!stored) {
         return;
       }
@@ -425,6 +441,48 @@ export class TerminalManager implements vscode.Disposable {
       }
       this.changeEmitter.fire();
     });
+  }
+
+  private createLegacyStoredSession(
+    folderId: string,
+    terminalName: string
+  ): StoredTerminalSession {
+    const managementName = isLegacyManagedTerminalName(terminalName)
+      ? terminalName
+      : nextTerminalName(
+          [...this.storedSessions.values()]
+            .filter((session) => session.folderId === folderId)
+            .map((session) => session.name)
+        );
+    const stored: StoredTerminalSession = {
+      id: randomUUID(),
+      folderId,
+      name: managementName,
+      terminalName: terminalName || managementName,
+      createdAt: Date.now() + this.restoreOrdinal++
+    };
+    this.storedSessions.set(stored.id, stored);
+    void this.queuePersist();
+    return stored;
+  }
+
+  private async folderForProcessCwd(
+    cwd: string | undefined
+  ): Promise<StoredFolder | undefined> {
+    if (!cwd) {
+      return undefined;
+    }
+    const directMatch = this.folderForCwd(cwd);
+    if (directMatch) {
+      return directMatch;
+    }
+    for (const folder of this.folders.values()) {
+      const folderPath = vscode.Uri.parse(folder.uri).fsPath;
+      if (await pathsReferToSameDirectory(cwd, folderPath)) {
+        return folder;
+      }
+    }
+    return undefined;
   }
 
   private trackProcessId(session: ManagedTerminalSession): void {
